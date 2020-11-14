@@ -1,0 +1,29 @@
+{
+  "name": "open360-web-api-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pabzzy-Mobile/Open360-API-Server.git"
+  },
+  "keywords": [
+    "Nodejs"
+  ],
+  "author": "Pedro Pires",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Pabzzy-Mobile/Open360-Web-API-Server/issues"
+  },
+  "homepage": "https://github.com/Pabzzy-Mobile/Open360-Web-API-Server#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "redis": "^3.0.2",
+    "socket.io": "^3.0.1",
+    "socket.io-client": "^3.0.1"
+  }
+}
