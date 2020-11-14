@@ -1,0 +1,38 @@
+version: '3.5'
+
+services:
+  web-api-server:
+    build: .
+    container_name: open-360-web-api-server
+    restart: on-failure
+    links:
+      - cache-redis
+    environment:
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    #DEBUG VARIABLES
+    #  - "9229:9229"
+    #command:
+    #  - node
+    #  - "--inspect-brk=0.0.0.0"
+    #  - "main.js"
+    networks:
+      api-network:
+      redis-api-cache:
+
+  cache-redis:
+    image: redis
+    container_name: open360-redis-api-cache
+    hostname: open360-redis-api-cache
+    volumes:
+      - "/usr/src/open360/web_api_data:/data"
+      - "/usr/src/open360/redis.conf:/usr/local/etc/redis/redis.conf"
+    networks:
+      redis-api-cache:
+
+networks:
+  redis-api-cache:
+  api-network:
+    external: true
+    name: "open360-api-network"
