@@ -17,12 +17,27 @@ const io = require("socket.io-client");
 // Tell the server what port it should use. 8080 is for testing purposes
 const PORT = parseInt(process.env.PORT) || 8080;
 
+// Set up the parser for requests that are json type
+app.use(require('body-parser').json('application/json'));
+
 // SERVER RESPONSES
 
 app.get("/", function (req, res) {
     CheckStatus()
         .then((data) => {
-            res.status(200).json({API: "alive"});
+            res.status(200).json({API: data});
+        });
+});
+
+app.get("/getChatStats", function (req, res) {
+    let room = req.body.roomName;
+    if (room == null || room == "") {
+        res.status(400).json({message: "Bad Request"});
+        return;
+    }
+    GetChatStats(room)
+        .then((data) => {
+            res.status(200).json({chatStats: data});
         });
 });
 
@@ -49,7 +64,7 @@ RedisClient.on('error', function (e){
 const socket = io("ws://open-360-api-sock:4000", {
     reconnectionDelayMax: 10000,
     query: {
-        name: "open360:web-api-server"
+        name: "open360:web-external-api-server"
     }
 });
 
@@ -60,10 +75,21 @@ socket.on("connect", function (){
 
 function CheckStatus() {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {target: "ingest-api", ack: "web-external-api",type: "question", package: "status"});
+        socket.emit("api-message", {target: "ingest-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
         socket.on("web-external-api", (data) => {
-            if (data.ack == "ingest-api" && data.type == "message") {
-                resolve(data);
+            if (data.ack == "ingest-api" && data.type == "message" && data.package.prompt == "status-reply") {
+                resolve(data.package.result.status);
+            }
+        });
+    });
+}
+
+function GetChatStats(roomName) {
+    return new Promise((resolve, reject) => {
+        socket.emit("api-message", {target: "chat-api", ack: "web-external-api",type: "question", package: {prompt: "roomStats", room: roomName}});
+        socket.on("web-external-api", (data) => {
+            if (data.ack == "chat-api" && data.type == "message" && data.package.prompt == "roomStats-reply") {
+                resolve(data.package.result);
             }
         });
     });
