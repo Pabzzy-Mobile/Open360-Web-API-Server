@@ -41,6 +41,18 @@ app.get("/getChatStats", function (req, res) {
         });
 });
 
+app.get("/getStreamStatus", function (req, res) {
+    let channelName = req.body.username;
+    if (channelName == null || channelName == "") {
+        res.status(400).json({message: "Bad Request"});
+        return;
+    }
+    GetStreamStatus(channelName)
+        .then((data) => {
+            res.status(200).json({streamStatus: data.name, code: data.code});
+        });
+});
+
 // SERVER LISTEN
 
 http.listen(PORT,function (){
@@ -100,6 +112,17 @@ function CheckStatus() {
         setTimeout(function (){
             resolve(status);
         }, 1000);
+    });
+}
+
+function GetStreamStatus(username) {
+    return new Promise((resolve, reject) => {
+        socket.emit("api-message", {target: "web-api", ack: "web-external-api",type: "question", package: {prompt: "streamStatus", username: username}});
+        socket.on("web-external-api", (data) => {
+            if (data.ack == "web-api" && data.type == "message" && data.package.prompt == "streamStatus-reply") {
+                resolve(data.package.result);
+            }
+        });
     });
 }
 
