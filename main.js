@@ -76,11 +76,30 @@ socket.on("connect", function (){
 function CheckStatus() {
     return new Promise((resolve, reject) => {
         socket.emit("api-message", {target: "ingest-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
+        socket.emit("api-message", {target: "web-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
+        socket.emit("api-message", {target: "chat-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
+
+        let status = {};
+        status.api = "alive";
+        status.ingest = "dead";
+        status.web = "dead";
+        status.chat = "dead";
+
         socket.on("web-external-api", (data) => {
             if (data.ack == "ingest-api" && data.type == "message" && data.package.prompt == "status-reply") {
-                resolve(data.package.result.status);
+                status.ingest = data.package.status;
+            }
+            if (data.ack == "web-api" && data.type == "message" && data.package.prompt == "status-reply") {
+                status.web = data.package.status;
+            }
+            if (data.ack == "chat-api" && data.type == "message" && data.package.prompt == "status-reply") {
+                status.chat = data.package.status;
             }
         });
+
+        setTimeout(function (){
+            resolve(status);
+        }, 1000);
     });
 }
 
