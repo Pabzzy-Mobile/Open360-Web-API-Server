@@ -117,10 +117,19 @@ function CheckStatus() {
 
 function GetStreamStatus(username) {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {target: "web-api", ack: "web-external-api",type: "question", package: {prompt: "streamStatus", username: username}});
+        socket.emit("api-message", {
+            target: "web-api",
+            ack: "web-external-api",
+            type: "question",
+            package: {
+                prompt: "streamStatus",
+                data: {username: username},
+                message: "Checking Stream Status"
+            }
+        });
         socket.on("web-external-api", (data) => {
             if (data.ack == "web-api" && data.type == "message" && data.package.prompt == "streamStatus-reply") {
-                resolve(data.package.result);
+                resolve(data.package.data);
             }
         });
     });
@@ -128,10 +137,19 @@ function GetStreamStatus(username) {
 
 function GetChatStats(roomName) {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {target: "chat-api", ack: "web-external-api",type: "question", package: {prompt: "roomStats", room: roomName}});
+        socket.emit("api-message", {
+            target: "chat-api",
+            ack: "web-external-api",
+            type: "question",
+            package: {
+                prompt: "roomStats",
+                data: {room: roomName},
+                message: "Checking Chat Stats"
+            }
+        });
         socket.on("web-external-api", (data) => {
             if (data.ack == "chat-api" && data.type == "message" && data.package.prompt == "roomStats-reply") {
-                resolve(data.package.result);
+                resolve(data.package.data);
             }
         });
     });
