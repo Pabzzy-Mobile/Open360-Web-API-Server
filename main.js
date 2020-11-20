@@ -149,25 +149,25 @@ function GetStreamStatus(username) {
 
 function GetStreamStats(username) {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {
-            target: "web-api",
-            ack: "web-external-api",
-            type: "question",
-            package: {
-                prompt: "streamStats",
-                data: {username: username},
-                message: "Checking Stream Stats"
-            }
-        });
-        socket.on("web-external-api", (streamData) => {
-            if (streamData.ack == "web-api" && streamData.type == "message" && streamData.package.prompt == "streamStats-reply") {
-                GetChatStats(username)
-                    .then((chatData) => {
+        GetChatStats(username)
+            .then((chatData) => {
+                socket.emit("api-message", {
+                    target: "web-api",
+                    ack: "web-external-api",
+                    type: "question",
+                    package: {
+                        prompt: "streamStats",
+                        data: {username: username},
+                        message: "Checking Stream Stats"
+                    }
+                });
+                socket.on("web-external-api", (streamData) => {
+                    if (streamData.ack == "web-api" && streamData.type == "message" && streamData.package.prompt == "streamStats-reply") {
                         let data = {...streamData.package.data, ...chatData};
                         resolve(data);
-                    });
-            }
-        });
+                    }
+                });
+            });
     });
 }
 
