@@ -14,6 +14,8 @@ let RedisClient = redis.createClient({
 // Socket for connecting to the internal API
 const io = require("socket.io-client");
 
+const Util = require("open360-util");
+
 // Tell the server what port it should use. 8080 is for testing purposes
 const PORT = parseInt(process.env.PORT) || 8080;
 
@@ -99,9 +101,9 @@ socket.on("connect", function (){
 
 function CheckStatus() {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {target: "ingest-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
-        socket.emit("api-message", {target: "web-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
-        socket.emit("api-message", {target: "chat-api", ack: "web-external-api",type: "question", package: {prompt: "status"}});
+        Util.api.sendQuestion(socket, "ingest-api", "web-external-api", {prompt: "status"});
+        Util.api.sendQuestion(socket, "web-api", "web-external-api", {prompt: "status"});
+        Util.api.sendQuestion(socket, "chat-api", "web-external-api", {prompt: "status"});
 
         let status = {};
         status.api = "alive";
@@ -110,13 +112,13 @@ function CheckStatus() {
         status.chat = "dead";
 
         socket.on("web-external-api", (data) => {
-            if (data.ack == "ingest-api" && data.type == "message" && data.package.prompt == "status-reply") {
+            if (data.ack == "ingest-api" && data.type == Util.api.APIMessageType.message && data.package.prompt == "status-reply") {
                 status.ingest = data.package.status;
             }
-            if (data.ack == "web-api" && data.type == "message" && data.package.prompt == "status-reply") {
+            if (data.ack == "web-api" && data.type == Util.api.APIMessageType.message && data.package.prompt == "status-reply") {
                 status.web = data.package.status;
             }
-            if (data.ack == "chat-api" && data.type == "message" && data.package.prompt == "status-reply") {
+            if (data.ack == "chat-api" && data.type == Util.api.APIMessageType.message && data.package.prompt == "status-reply") {
                 status.chat = data.package.status;
             }
         });
@@ -129,18 +131,14 @@ function CheckStatus() {
 
 function GetStreamStatus(username) {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {
-            target: "web-api",
-            ack: "web-external-api",
-            type: "question",
-            package: {
-                prompt: "streamStatus",
-                data: {username: username},
-                message: "Checking Stream Status"
-            }
-        });
+        let pack = {
+            prompt: "streamStatus",
+            data: {username: username},
+            message: "Checking Stream Status"
+        }
+        Util.api.sendQuestion(socket, "web-api", "web-external-api", pack);
         socket.on("web-external-api", (data) => {
-            if (data.ack == "web-api" && data.type == "message" && data.package.prompt == "streamStatus-reply") {
+            if (data.ack == "web-api" && data.type == Util.api.APIMessageType.message && data.package.prompt == "streamStatus-reply") {
                 resolve(data.package.data);
             }
         });
@@ -151,18 +149,14 @@ function GetStreamStats(username) {
     return new Promise((resolve, reject) => {
         GetChatStats(username)
             .then((chatData) => {
-                socket.emit("api-message", {
-                    target: "web-api",
-                    ack: "web-external-api",
-                    type: "question",
-                    package: {
-                        prompt: "streamStats",
-                        data: {username: username},
-                        message: "Checking Stream Stats"
-                    }
-                });
+                let pack = {
+                    prompt: "streamStats",
+                    data: {username: username},
+                    message: "Checking Stream Stats"
+                }
+                Util.api.sendQuestion(socket, "web-api", "web-external-api", pack);
                 socket.on("web-external-api", (streamData) => {
-                    if (streamData.ack == "web-api" && streamData.type == "message" && streamData.package.prompt == "streamStats-reply") {
+                    if (streamData.ack == "web-api" && streamData.type == Util.api.APIMessageType.message && streamData.package.prompt == "streamStats-reply") {
                         let data = {...streamData.package.data, ...chatData};
                         resolve(data);
                     }
@@ -173,16 +167,12 @@ function GetStreamStats(username) {
 
 function GetChatStats(roomName) {
     return new Promise((resolve, reject) => {
-        socket.emit("api-message", {
-            target: "chat-api",
-            ack: "web-external-api",
-            type: "question",
-            package: {
-                prompt: "roomStats",
-                data: {room: roomName},
-                message: "Checking Chat Stats"
-            }
-        });
+        let pack = {
+            prompt: "roomStats",
+            data: {room: roomName},
+            message: "Checking Chat Stats"
+        }
+        Util.api.sendQuestion(socket, "chat-api", "web-external-api", pack);
         socket.on("web-external-api", (data) => {
             if (data.ack == "chat-api" && data.type == "message" && data.package.prompt == "roomStats-reply") {
                 resolve(data.package.data);

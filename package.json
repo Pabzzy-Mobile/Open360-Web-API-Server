@@ -23,6 +23,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
+    "open360-util": "^0.1.2",
     "redis": "^3.0.2",
     "socket.io": "^3.0.1",
     "socket.io-client": "^3.0.1"
