@@ -27,7 +27,7 @@ app.use(require('body-parser').json('application/json'));
 app.get("/", function (req, res) {
     CheckStatus()
         .then((data) => {
-            res.status(200).json({API: data});
+            res.status(200).json({status: data});
         });
 });
 
